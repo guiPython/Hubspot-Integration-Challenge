@@ -40,13 +40,7 @@ class CsvContactRepository implements IContactQueriesRepository {
 
   async findAllContacts(): Promise<Contact[]> {
     try {
-      /*const first = await this.reader.shift(this.path).then((line) => {
-        const [first_name, last_name, email, gender] = line.split(",");
-        return this.transform({ first_name, last_name, email, gender });
-      });*/
-
       return await this.reader.read(this.path, this.transform);
-      //return contacts.filter((c) => !first.equals(c));
     } catch (error) {
       if (error instanceof ErrorOnReadCsv)
         throw new ContactRepositoryError(error.message);
