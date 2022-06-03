@@ -44,9 +44,15 @@ const createContactsInHubSpotOnStartup = (
   );
 
   if (validContacts.length === allContacts.length)
-    logger.info("All contacts imported are valids for export");
+    logger.info("All imported contacts will be exported");
+  else if (validContacts.length > 0)
+    logger.warn(
+      `Only ${validContacts.length} of imported contacts will be exported`
+    );
   else
-    logger.warn(`Only ${validContacts.length} contact(s) valid(s) for export`);
+    logger.warn(
+      "None of the imported contacts will be exported, they all already exist"
+    );
   const hubSpotContactsRepository =
     createHubSpotContactsRepository(hubSpotApiKey);
   return new CreateContacts(hubSpotContactsRepository, validContacts);
