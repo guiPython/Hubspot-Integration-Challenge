@@ -204,11 +204,6 @@ describe("Test HubSpotContactsRepository", () => {
         mockHubSpotContactsClient
       );
 
-      const mockRegisterContactsRequest: RegisterContacts = {
-        hapiKey: hubSpotApiKey,
-        body: [],
-      };
-
       const mockHubSpotContactResponse: HubSpotError = {
         status: "error",
         message: "Error on add contacts",
@@ -223,17 +218,15 @@ describe("Test HubSpotContactsRepository", () => {
         mockErrorOnCreateContacts
       );
 
-      await expect(sut.createContacts([])).rejects.toThrow(
+      await expect(
+        sut.createContacts([mockContact, mockContact])
+      ).rejects.toThrow(
         new ContactRepositoryError(
           "Cannot create some contact in list, aborted operation"
         )
       );
       expect(mockHubSpotContactsClient.registerContacts).toHaveBeenCalledTimes(
         1
-      );
-
-      expect(mockHubSpotContactsClient.registerContacts).toBeCalledWith(
-        mockRegisterContactsRequest
       );
     });
 
@@ -251,7 +244,9 @@ describe("Test HubSpotContactsRepository", () => {
         mockSuccessOnCreateContacts
       );
       const response = await sut.createContacts([mockContact, mockContact]);
-
+      expect(mockHubSpotContactsClient.registerContacts).toHaveBeenCalledTimes(
+        1
+      );
       expect(response).toBeTruthy();
     });
 

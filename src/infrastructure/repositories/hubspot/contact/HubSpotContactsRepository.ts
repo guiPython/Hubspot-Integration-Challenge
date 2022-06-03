@@ -12,14 +12,20 @@ import {
   RegisterContact,
   RegisterContacts,
 } from "../client/contact/requests/HubSpotContactsRequest";
-import { SuccessOnGetAllContacts } from "../client/contact/responses/HubSpotContactsResponses";
-import { logger } from "../../../../logger";
+import {
+  ErrorOnCreateContacts,
+  SuccessOnCreateContacts,
+  SuccessOnGetAllContacts,
+} from "../client/contact/responses/HubSpotContactsResponses";
+import { BatchUtil } from "../../../../utils/Batchs";
 
 const maxContactsPerRequest = "100";
 
 class HubSpotContactsRepository implements IContactRepository {
   private readonly apiKey: string;
   private readonly hubspotClient: IHubSpotContactsClient;
+  private readonly batchUtil: BatchUtil<Contact> = new BatchUtil();
+
   constructor(apiKey: string, hubspotClient: IHubSpotContactsClient) {
     this.hubspotClient = hubspotClient;
     this.apiKey = apiKey;
@@ -51,7 +57,9 @@ class HubSpotContactsRepository implements IContactRepository {
           request.pathParameter = pathParameter;
           response = await this.hubspotClient.getAllContacts(request);
         }
+
         hasMore = response.body["has-more"];
+        vidOffset = response.body["vid-offset"].toString();
         response.body.contacts.forEach((c) =>
           contacts.push(
             new Contact({
@@ -61,6 +69,12 @@ class HubSpotContactsRepository implements IContactRepository {
             })
           )
         );
+
+        if (
+          request.pathParameter.vidOffset ===
+          response.body["vid-offset"].toString()
+        )
+          hasMore = false;
       }
 
       return contacts;
@@ -98,8 +112,14 @@ class HubSpotContactsRepository implements IContactRepository {
   }
 
   async createContacts(contacts: Contact[]): Promise<boolean> {
-    try {
-      const registers: HubSpotContactBatch[] = contacts.map((c) => {
+    if (contacts.length === 0) return true;
+    const chunks = this.batchUtil.sliceIntoChunks(
+      contacts,
+      Number(maxContactsPerRequest)
+    );
+
+    const requests: RegisterContacts[] = chunks.map((chunk) => {
+      const contacts: HubSpotContactBatch[] = chunk.map((c) => {
         return {
           email: c.email,
           properties: [
@@ -109,22 +129,33 @@ class HubSpotContactsRepository implements IContactRepository {
         };
       });
 
-      const request: RegisterContacts = {
+      return {
         hapiKey: this.apiKey,
-        body: registers,
+        body: contacts,
       };
-      const response = await this.hubspotClient.registerContacts(request);
+    });
 
-      if (response.status === "400")
-        throw new ContactRepositoryError(
-          "Cannot create some contact in list, aborted operation"
-        );
-      return true;
-    } catch (err) {
-      if (err instanceof HubSpotClientError)
-        throw new ContactRepositoryError(err.message);
-      throw err;
+    const promises: Promise<SuccessOnCreateContacts | ErrorOnCreateContacts>[] =
+      [];
+
+    for (let request of requests) {
+      promises.push(this.hubspotClient.registerContacts(request));
     }
+
+    return await Promise.all(promises)
+      .then((responses) => {
+        const statusOfResponses = responses.map((r) => r.status);
+        if (statusOfResponses.includes("400"))
+          throw new ContactRepositoryError(
+            "Cannot create some contact in list, aborted operation"
+          );
+        return true;
+      })
+      .catch((err) => {
+        if (err instanceof HubSpotClientError)
+          throw new ContactRepositoryError(err.message);
+        throw err;
+      });
   }
 }
 
