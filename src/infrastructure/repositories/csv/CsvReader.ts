@@ -18,9 +18,6 @@ class CsvReader<Chunk, Register> {
     this.currentLine = this.initLine;
   }
 
-  //TODO: Leitura com dados na memória
-  /* public async readInMemory()
-   */
 
   public async read(
     path: string,
