@@ -6,7 +6,7 @@ COPY package*.json .
 COPY yarn.lock .
 COPY .env .
 
-RUN yarn global add rimraf
+RUN yarn global add tsc
 
 RUN yarn install
 
@@ -25,8 +25,6 @@ COPY package*.json .
 COPY yarn.lock .
 COPY Contatos.csv .
 COPY .env .
-
-RUN yarn global add rimraf
 
 RUN yarn install --frozen-lockfile --prod
 
