@@ -1,10 +1,19 @@
 # Application Requirements
 ## Startup
 ### Must contain the hubspot api key in the __HUBSPOT_API_KEY__ environment variable of the .env file
-<br>
 
+### Before running the commands below make sure you have yarn installed
+```bash
+    # If you don't have yarn installed
+    npm install --global yarn
+
+    # Check install
+    yarn --version
+```
+### After installing yarn you can run the yarn install command to download the application's dependencies
 
 # Application Commands
+
 ```bash
     # Build and start application
     yarn start
@@ -21,7 +30,6 @@
     # down docker container
     yarn down
 ```
-<br>
 
 ### Note: use __yarn dev__ only if it was __not__ possible to start the application with __yarn start__ and __yarn up__.
 
