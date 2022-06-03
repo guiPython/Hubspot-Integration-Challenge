@@ -1,0 +1,11 @@
+version: '3'
+services:
+  api:
+    container_name: "desafio-axur"
+    env_file:
+      - .env
+    build:
+      context: .
+      target: production
+    ports:
+      - ${PORT}:${PORT}
