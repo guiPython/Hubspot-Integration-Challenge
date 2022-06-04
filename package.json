@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "ts-node-dev --respawn -r tsconfig-paths/register src/index.ts",
     "build": "tsc && tscpaths -p tsconfig.json -s ./src -o ./dist",
-    "up": "yarn build && docker-compose up -d",
+    "up": "docker-compose up -d",
     "down": "docker-compose down",
     "test": "jest --runInBand --silent",
     "test:coverage": "jest --runInBand --collect-coverage",
